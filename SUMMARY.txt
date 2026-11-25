@@ -1,0 +1,142 @@
+# proxiGo – Project Summary
+
+## Overview
+proxiGo is a PHP MVC web application developed for the **2A Web Technologies** course.
+
+It includes:
+- User registration and login
+- Separate user and administrator roles
+- An administrator dashboard
+- User account management
+
+---
+
+## Current structure
+
+| Area | Purpose |
+|---|---|
+| `index.php` | Main entry point and route handler |
+| `controllers/` | Authentication and user-management logic |
+| `models/` | User data model |
+| `views/` | Pages, layouts, and forms |
+| `config/database.php` | MySQL database connection |
+| `database.sql` | Database and table setup |
+| `assets/` | Client-side assets |
+
+---
+
+## Roles
+
+| Role | Access |
+|---|---|
+| `user` | Authenticated user dashboard |
+| `admin` | Administrator dashboard and user management |
+
+New users start with the `user` role. Administrators must promote accounts to `admin` manually through phpMyAdmin.
+
+---
+
+## Main features
+
+- Register and log in
+- Log out and end a session
+- View role-specific dashboards
+- Administer users:
+  - Create
+  - View
+  - Edit
+  - Delete
+- Protect accounts from common administrator mistakes
+- Validate forms and protect actions with CSRF tokens
+- Store passwords using PHP password hashing
+
+---
+
+## Main routes
+
+| Route | Who can access | Purpose |
+|---|---|---|
+| `register` | Guests | Create an account |
+| `login` | Guests | Sign in |
+| `logout` | Signed-in users | Sign out |
+| `dashboard` | Signed-in users | User dashboard |
+| `admin` | Administrators | Admin dashboard |
+| `admin_users` | Administrators | List users |
+| `admin_user_create` | Administrators | Create a user |
+| `admin_user_edit` | Administrators | Edit a user |
+| `admin_user_delete` | Administrators | Delete a user |
+
+---
+
+## Database setup
+
+The application uses a MySQL database named `session`.
+
+Import `database.sql` through phpMyAdmin. The `users` table currently stores:
+
+- Account ID
+- Username
+- Email
+- Hashed password
+- Role
+- Creation date
+
+Database settings are currently in `config/database.php`.
+
+---
+
+## Local setup
+
+1. Place the project in `xampp/htdocs/proxiGo`.
+2. Start Apache and MySQL.
+3. Import `database.sql`.
+4. Open:
+   `http://localhost/proxiGo/index.php?action=register`
+
+---
+
+## Security
+
+- PDO prepared statements
+- Password hashing
+- CSRF checks
+- Session expiration after inactivity
+- Session ID regeneration after login
+- Authentication and role checks
+- Basic HTTP security headers
+
+---
+
+## Team workflow
+
+- Never push directly to `main`
+- Create a branch for each feature or fix
+- Open a pull request
+- Request a review before merging
+
+---
+
+## Known configuration details
+
+- Database: `session`
+- Local host: `localhost`
+- Default XAMPP database user: `root`
+- Default password: empty
+- Secure-cookie settings require HTTPS configuration in production
+
+---
+
+## Current status
+
+Initial authentication, dashboards, role handling, and administrator user CRUD are implemented.
+
+## Future updates
+
+<!--
+Update this section with completed features, known issues, and current priorities.
+
+Example:
+- [ ] Feature or improvement
+- [ ] Team task or issue
+- [ ] Release or deployment note
+-->
