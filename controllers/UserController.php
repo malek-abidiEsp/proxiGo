@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UserModel.php';
@@ -5,14 +6,17 @@ require_once __DIR__ . '/AuthController.php';
 
 /**
  * CRUD of users (backoffice, admin only).
- * All business logic + SQL lives here (MVC rule).
  */
 class UserController
 {
     private PDO $db;
     private AuthController $auth;
 
-    public const ROLES = ['user', 'admin'];
+    // Role names and their database IDs
+    public const ROLES = [
+        'user' => 2,
+        'admin' => 1
+    ];
 
     public function __construct(AuthController $auth)
     {
@@ -23,61 +27,100 @@ class UserController
     // ==============================================================
     // READ
     // ==============================================================
+
     /** @return UserModel[] */
     public function findAll(): array
     {
-        $stmt = $this->db->query('SELECT * FROM users ORDER BY id ASC');
-        return array_map(fn(array $row) => UserModel::fromArray($row), $stmt->fetchAll());
+        $stmt = $this->db->query(
+            'SELECT * FROM users ORDER BY id ASC'
+        );
+
+        return array_map(
+            fn(array $row) => UserModel::fromArray($row),
+            $stmt->fetchAll()
+        );
     }
 
     public function findById(int $id): ?UserModel
     {
-        $stmt = $this->db->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
+        $stmt = $this->db->prepare(
+            'SELECT * FROM users WHERE id = :id LIMIT 1'
+        );
+
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch();
+
         return $row ? UserModel::fromArray($row) : null;
     }
 
-    private function isTaken(string $email, string $username, int $excludeId = 0): bool
-    {
+    // ==============================================================
+    // CHECK DUPLICATES
+    // ==============================================================
+
+    private function isTaken(
+        string $email,
+        string $username,
+        int $excludeId = 0
+    ): bool {
         $stmt = $this->db->prepare(
-            'SELECT id FROM users WHERE (email = :email OR username = :username) AND id <> :id LIMIT 1'
+            'SELECT id FROM users
+             WHERE (email = :email OR username = :username)
+             AND id <> :id
+             LIMIT 1'
         );
-        $stmt->execute(['email' => $email, 'username' => $username, 'id' => $excludeId]);
+
+        $stmt->execute([
+            'email' => $email,
+            'username' => $username,
+            'id' => $excludeId
+        ]);
+
         return (bool) $stmt->fetch();
     }
 
     // ==============================================================
-    // VALIDATION (server side)
+    // VALIDATION
     // ==============================================================
-    private function validate(array $post, bool $passwordRequired): array
-    {
+
+    private function validate(
+        array $post,
+        bool $passwordRequired
+    ): array {
         $errors = [];
+
         $username = trim($post['username'] ?? '');
         $email = trim($post['email'] ?? '');
         $password = $post['password'] ?? '';
-        $role = $post['role'] ?? '';
+        $roleId = (int) ($post['role_id'] ?? 0);
 
-        if (!preg_match('/^[a-zA-Z0-9_\-]{3,50}$/', $username)) {
+        if (!preg_match('/^[a-zA-Z0-9_-]{3,50}$/', $username)) {
             $errors[] = "Username must be 3 to 50 characters (letters, digits, _ or -).";
         }
-        if (strlen($email) > 150 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+        if (
+            strlen($email) > 150 ||
+            !filter_var($email, FILTER_VALIDATE_EMAIL)
+        ) {
             $errors[] = "Invalid email address.";
         }
-        if (!in_array($role, self::ROLES, true)) {
+
+        if (!in_array($roleId, self::ROLES, true)) {
             $errors[] = "Invalid role.";
         }
+
         if ($passwordRequired || $password !== '') {
             if (strlen($password) < 8) {
                 $errors[] = "Password must be at least 8 characters long.";
             }
         }
+
         return $errors;
     }
 
     // ==============================================================
     // CREATE
     // ==============================================================
+
     public function create(array $post): array
     {
         if (!$this->auth->verifyCsrfToken($post['csrf_token'] ?? null)) {
@@ -85,33 +128,45 @@ class UserController
         }
 
         $errors = $this->validate($post, true);
+
         if (!empty($errors)) {
             return $errors;
         }
 
         $username = trim($post['username']);
         $email = trim($post['email']);
+        $roleId = (int) $post['role_id'];
 
         if ($this->isTaken($email, $username)) {
             return ["This email or username is already taken."];
         }
 
         $stmt = $this->db->prepare(
-            'INSERT INTO users (username, email, password, role) VALUES (:username, :email, :password, :role)'
+            'INSERT INTO users
+            (username, email, password, role_id)
+            VALUES
+            (:username, :email, :password, :role_id)'
         );
+
         $ok = $stmt->execute([
             'username' => $username,
-            'email'    => $email,
-            'password' => password_hash($post['password'], PASSWORD_DEFAULT),
-            'role'     => $post['role'],
+            'email' => $email,
+            'password' => password_hash(
+                $post['password'],
+                PASSWORD_DEFAULT
+            ),
+            'role_id' => $roleId
         ]);
 
-        return $ok ? [] : ["An error occurred while creating the user."];
+        return $ok
+            ? []
+            : ["An error occurred while creating the user."];
     }
 
     // ==============================================================
-    // UPDATE (password optional: empty = unchanged)
+    // UPDATE
     // ==============================================================
+
     public function update(int $id, array $post): array
     {
         if (!$this->auth->verifyCsrfToken($post['csrf_token'] ?? null)) {
@@ -123,17 +178,19 @@ class UserController
         }
 
         $errors = $this->validate($post, false);
+
         if (!empty($errors)) {
             return $errors;
         }
 
         $username = trim($post['username']);
         $email = trim($post['email']);
-        $role = $post['role'];
+        $roleId = (int) $post['role_id'];
+
         $isSelf = $id === (int) ($_SESSION['user_id'] ?? 0);
 
-        // Prevent an admin from locking himself out
-        if ($isSelf && $role !== 'admin') {
+        // Prevent an admin from removing their own admin role
+        if ($isSelf && $roleId !== 1) {
             return ["You cannot remove your own admin role."];
         }
 
@@ -141,13 +198,34 @@ class UserController
             return ["This email or username is already taken."];
         }
 
-        $params = ['username' => $username, 'email' => $email, 'role' => $role, 'id' => $id];
+        $params = [
+            'username' => $username,
+            'email' => $email,
+            'role_id' => $roleId,
+            'id' => $id
+        ];
 
         if (($post['password'] ?? '') !== '') {
-            $sql = 'UPDATE users SET username = :username, email = :email, role = :role, password = :password WHERE id = :id';
-            $params['password'] = password_hash($post['password'], PASSWORD_DEFAULT);
+
+            $sql = 'UPDATE users
+                    SET username = :username,
+                        email = :email,
+                        role_id = :role_id,
+                        password = :password
+                    WHERE id = :id';
+
+            $params['password'] = password_hash(
+                $post['password'],
+                PASSWORD_DEFAULT
+            );
+
         } else {
-            $sql = 'UPDATE users SET username = :username, email = :email, role = :role WHERE id = :id';
+
+            $sql = 'UPDATE users
+                    SET username = :username,
+                        email = :email,
+                        role_id = :role_id
+                    WHERE id = :id';
         }
 
         $ok = $this->db->prepare($sql)->execute($params);
@@ -156,25 +234,37 @@ class UserController
             $_SESSION['username'] = $username;
         }
 
-        return $ok ? [] : ["An error occurred while updating the user."];
+        return $ok
+            ? []
+            : ["An error occurred while updating the user."];
     }
 
     // ==============================================================
-    // DELETE (POST + CSRF only)
+    // DELETE
     // ==============================================================
+
     public function delete(int $id, array $post): array
     {
         if (!$this->auth->verifyCsrfToken($post['csrf_token'] ?? null)) {
             return ["Invalid security token. Please try again."];
         }
+
         if ($id === (int) ($_SESSION['user_id'] ?? 0)) {
             return ["You cannot delete your own account."];
         }
+
         if (!$this->findById($id)) {
             return ["User not found."];
         }
 
-        $ok = $this->db->prepare('DELETE FROM users WHERE id = :id')->execute(['id' => $id]);
-        return $ok ? [] : ["An error occurred while deleting the user."];
+        $stmt = $this->db->prepare(
+            'DELETE FROM users WHERE id = :id'
+        );
+
+        $ok = $stmt->execute(['id' => $id]);
+
+        return $ok
+            ? []
+            : ["An error occurred while deleting the user."];
     }
 }
