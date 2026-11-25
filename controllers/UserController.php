@@ -4,15 +4,11 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/AuthController.php';
 
-/**
- * CRUD of users (backoffice, admin only).
- */
+
 class UserController
 {
     private PDO $db;
     private AuthController $auth;
-
-    // Role names and their database IDs
     public const ROLES = [
         'user' => 2,
         'admin' => 1
@@ -24,11 +20,7 @@ class UserController
         $this->auth = $auth;
     }
 
-    // ==============================================================
-    // READ
-    // ==============================================================
 
-    /** @return UserModel[] */
     public function findAll(): array
     {
         $stmt = $this->db->query(
@@ -53,10 +45,6 @@ class UserController
         return $row ? UserModel::fromArray($row) : null;
     }
 
-    // ==============================================================
-    // CHECK DUPLICATES
-    // ==============================================================
-
     private function isTaken(
         string $email,
         string $username,
@@ -77,10 +65,6 @@ class UserController
 
         return (bool) $stmt->fetch();
     }
-
-    // ==============================================================
-    // VALIDATION
-    // ==============================================================
 
     private function validate(
         array $post,
@@ -116,11 +100,6 @@ class UserController
 
         return $errors;
     }
-
-    // ==============================================================
-    // CREATE
-    // ==============================================================
-
     public function create(array $post): array
     {
         if (!$this->auth->verifyCsrfToken($post['csrf_token'] ?? null)) {
@@ -163,9 +142,6 @@ class UserController
             : ["An error occurred while creating the user."];
     }
 
-    // ==============================================================
-    // UPDATE
-    // ==============================================================
 
     public function update(int $id, array $post): array
     {
@@ -189,7 +165,6 @@ class UserController
 
         $isSelf = $id === (int) ($_SESSION['user_id'] ?? 0);
 
-        // Prevent an admin from removing their own admin role
         if ($isSelf && $roleId !== 1) {
             return ["You cannot remove your own admin role."];
         }
@@ -239,9 +214,6 @@ class UserController
             : ["An error occurred while updating the user."];
     }
 
-    // ==============================================================
-    // DELETE
-    // ==============================================================
 
     public function delete(int $id, array $post): array
     {
