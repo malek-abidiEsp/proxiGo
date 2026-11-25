@@ -1,9 +1,6 @@
 
 <?php
-/**
- * config/database.php
- * Secure PDO database connection (Singleton)
- */
+
 class Database
 {
     private static $pdo = null;
