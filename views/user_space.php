@@ -1,8 +1,5 @@
 <?php
-/**
- * views/user_space.php
- * Expects: $user (UserModel)
- */
+
 ob_start();
 ?>
 <div class="container wide">
