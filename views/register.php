@@ -1,8 +1,5 @@
 <?php
-/**
- * views/register.php
- * Expects: $errors (array), $old (array), $csrfToken (string)
- */
+
 ob_start();
 $old = $old ?? [];
 ?>
