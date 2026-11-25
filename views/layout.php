@@ -37,6 +37,12 @@ button:hover { background: var(--chrome-blue-dark); }
 .alert { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 14px; }
 .alert-error { background: #fce8e6; color: var(--chrome-red); border: 1px solid #f6c1bc; }
 .alert-success { background: #e6f4ea; color: var(--chrome-green); border: 1px solid #b7dfc2; }
+.error-message {
+    display: block;
+    color: red;
+    font-size: 14px;
+    margin-top: 5px;
+}
 .switch-link { text-align: center; margin-top: 18px; font-size: 13px; color: var(--chrome-text-light); }
 .switch-link a { color: var(--chrome-blue); text-decoration: none; }
 .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
@@ -45,6 +51,82 @@ button:hover { background: var(--chrome-blue-dark); }
 table { width: 100%; border-collapse: collapse; margin-top: 20px; }
 th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--chrome-border); font-size: 14px; }
 th { color: var(--chrome-text-light); font-weight: 600; }
+
+/* Responsive Design */
+
+/* Tablette */
+@media (max-width: 768px) {
+
+    .container {
+        max-width: 90%;
+        margin: 30px auto;
+        padding: 25px;
+    }
+
+    .container.wide {
+        max-width: 90%;
+    }
+
+    nav.topnav {
+        padding: 12px 16px;
+    }
+
+    table {
+        font-size: 13px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+}
+
+/* Téléphone */
+@media (max-width: 480px) {
+
+    .container {
+        max-width: 95%;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    nav.topnav {
+        flex-direction: column;
+        gap: 12px;
+        padding: 15px;
+    }
+
+    nav.topnav .links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    nav.topnav .links a {
+        margin-left: 0;
+        font-size: 13px;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    input[type=text],
+    input[type=email],
+    input[type=password] {
+        font-size: 16px;
+    }
+
+    button {
+        font-size: 14px;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
 </style>
 </head>
 <body>
