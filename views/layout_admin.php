@@ -1,9 +1,5 @@
 <?php
-/**
- * views/layout_admin.php
- * Dedicated BACKOFFICE layout (sidebar)
- * Expects: $title, $content, $activePage, $user (UserModel)
- */
+
 $activePage = $activePage ?? 'dashboard';
 ?>
 <!DOCTYPE html>
@@ -57,7 +53,7 @@ tr:last-child td { border-bottom: none; }
 .badge-admin { background: #fee2e2; color: var(--red); }
 .badge-user { background: #e0e7ff; color: var(--accent-dark); }
 
-/* CRUD additions */
+
 .btn { display: inline-block; padding: 9px 16px; background: var(--accent); color: #fff; border: 1px solid var(--accent); border-radius: 8px; font-size: 14px; text-decoration: none; cursor: pointer; }
 .btn:hover { background: var(--accent-dark); }
 .btn-sm { padding: 5px 12px; font-size: 13px; }
