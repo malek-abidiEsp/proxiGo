@@ -1,9 +1,5 @@
 <?php
-/**
- * views/layout.php
- * Global HTML layout for the FRONTOFFICE (regular users)
- * Expects: $title (string), $content (string, already generated/escaped)
- */
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
