@@ -56,6 +56,7 @@ th { color: var(--chrome-text-light); font-weight: 600; }
                 <a href="index.php?action=admin">Admin panel</a>
             <?php else: ?>
                 <a href="index.php?action=dashboard">My space</a>
+                <a href="index.php?action=profile">Mon Profil</a>
             <?php endif; ?>
             <a href="index.php?action=logout" class="btn-primary">Log out</a>
         <?php else: ?>

@@ -249,6 +249,58 @@ switch ($action) {
         require __DIR__ . '/views/admin_user_form.php';
         break;
 
+        case 'profile':
+            AuthController::requireAuth();
+
+            $userId = (int) $_SESSION['user_id'];
+            $user = $authController->findById($userId);
+
+            if (!$user) {
+                $authController->logout();
+                header('Location: index.php?action=login');
+                exit;
+            }
+
+            $errors = [];
+
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $errors = $userController->updateProfile($userId, $_POST);
+
+                if (empty($errors)) {
+                    setFlash('success', 'Profile updated successfully.');
+                    header('Location: index.php?action=profile');
+                    exit;
+                }
+            }
+
+            $user = $authController->findById($userId);
+            $csrfToken = $authController->getCsrfToken();
+            $flash = popFlash();
+
+            require __DIR__ . '/views/profile.php';
+            break;
+
+        case 'change_password':
+                AuthController::requireAuth();
+
+                if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                    http_response_code(405);
+                    die('Method not allowed.');
+                }
+
+                $userId = (int) $_SESSION['user_id'];
+
+                $errors = $userController->changePassword($userId, $_POST);
+
+                if (empty($errors)) {
+                    setFlash('success', 'Password changed successfully.');
+                } else {
+                    setFlash('error', $errors[0]);
+                }
+
+                header('Location: index.php?action=profile');
+                exit;
+
     case 'admin_user_delete':
         AuthController::requireRole('admin');
 
@@ -267,6 +319,7 @@ switch ($action) {
 
         header('Location: index.php?action=admin_users');
         exit;
+
 
     default:
         http_response_code(404);
