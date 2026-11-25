@@ -1,8 +1,5 @@
 <?php
-/**
- * views/login.php
- * Expects: $errors (array), $csrfToken (string)
- */
+
 ob_start();
 ?>
 <div class="container">
