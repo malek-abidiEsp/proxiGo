@@ -2,8 +2,12 @@
 <?php
 ob_start();
 ?>
-<div class="container">
-    <h1>Log in</h1>
+<div class="container" style="max-width: 460px; margin: 75px auto; padding: 42px;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h2 style="color: #40e0d0; font-size: 32px; font-weight: 700; margin-bottom: 12px;">ProxiGo</h2>
+<h1 style="margin-bottom: 10px; font-size: 30px;">Welcome Back</h1>
+        <p style="color: #817e84; margin: 0;">Log in to your ProxiGo account</p>
+    </div>
 
     <?php if (!empty($errors)): ?>
         <div class="alert alert-error">
@@ -21,12 +25,12 @@ ob_start();
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
         <label for="email">Email address</label>
-        <input type="email" id="email" name="email" autocomplete="email">
+        <input type="email" id="email" name="email" autocomplete="email" placeholder="Enter your email">
 
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" autocomplete="current-password">
-
-        <button type="submit">Log in</button>
+<input type="password" id="password" name="password"
+       autocomplete="new-password"
+       placeholder="Enter your password">        <button type="submit" style="width: 100%; margin-top: 18px;">Log in</button>
     </form>
 
     <script src="assets/login-validation.js"></script>

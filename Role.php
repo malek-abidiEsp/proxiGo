@@ -1,107 +1,128 @@
 
 <?php
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/RoleController.php';
 
-// Connexion à la base de données
+AuthController::requireRole('admin');
+
 $db = Database::getConnexion();
+$authController = new AuthController();
 
-// Création du controller
-$roleController = new RoleController($db);
+$user = $authController->findById((int) $_SESSION['user_id']);
 
-// Action demandée
-$action = $_GET['action'] ?? 'index';
-
-// Afficher les rôles
-if ($action == 'index') {
-
-    $roles = $roleController->index();
-    require __DIR__ . '/views/roles/index.php';
-
-}
-
-// Afficher formulaire d'ajout
-elseif ($action == 'add') {
-
-    require __DIR__ . '/views/roles/create.php';
-
-}
-
-// Enregistrer un nouveau rôle
-elseif ($action == 'save') {
-
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-
-        $name = trim($_POST['name'] ?? '');
-
-        if ($name != '') {
-            $roleController->add($name);
-        }
-    }
-
-    header('Location: Role.php');
+if ($user === null) {
+    session_destroy();
+    header('Location: index.php?action=login');
     exit;
 }
 
-// Afficher formulaire de modification
-elseif ($action == 'edit') {
+$roleController = new RoleController($db);
+$action = $_GET['action'] ?? 'index';
 
+if ($action === 'index') {
+    $roles = $roleController->index();
+    $flash = $_SESSION['role_flash'] ?? null;
+    unset($_SESSION['role_flash']);
+    require __DIR__ . '/views/role/index.php';
+
+} elseif ($action === 'add') {
+    $csrfToken = $authController->getCsrfToken();
+    require __DIR__ . '/views/role/create.php';
+
+} elseif ($action === 'save') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        exit('Method not allowed');
+    }
+
+    if (!$authController->verifyCsrfToken($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        exit('Invalid security token.');
+    }
+
+    $name = trim($_POST['name'] ?? '');
+    $success = $roleController->add($name);
+
+    $_SESSION['role_flash'] = [
+        'type' => $success ? 'success' : 'error',
+        'message' => $success ? 'Role added successfully.' : 'Unable to add role. Check the name or verify that it does not already exist.'
+    ];
+
+    header('Location: Role.php');
+    exit;
+
+} elseif ($action === 'edit') {
     $id = (int) ($_GET['id'] ?? 0);
     $roles = $roleController->index();
     $role = null;
 
     foreach ($roles as $r) {
-        if ($r['id'] == $id) {
+        if ((int) $r['id'] === $id) {
             $role = $r;
             break;
         }
     }
 
-    if ($role != null) {
-        require __DIR__ . '/views/roles/edit.php';
+    if ($role !== null) {
+        $csrfToken = $authController->getCsrfToken();
+        require __DIR__ . '/views/role/edit.php';
     } else {
         header('Location: Role.php');
         exit;
     }
-}
 
-// Enregistrer les modifications
-elseif ($action == 'update') {
-
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-
-        $id = (int) ($_POST['id'] ?? 0);
-        $name = trim($_POST['name'] ?? '');
-
-        if ($id > 0 && $name != '') {
-            $roleController->update($id, $name);
-        }
+} elseif ($action === 'update') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        exit('Method not allowed');
     }
+
+    if (!$authController->verifyCsrfToken($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        exit('Invalid security token.');
+    }
+
+    $id = (int) ($_POST['id'] ?? 0);
+    $name = trim($_POST['name'] ?? '');
+    $success = $roleController->update($id, $name);
+
+    $_SESSION['role_flash'] = [
+        'type' => $success ? 'success' : 'error',
+        'message' => $success ? 'Role updated successfully.' : 'Unable to update role. Check the name or verify that it does not already exist.'
+    ];
 
     header('Location: Role.php');
     exit;
-}
 
-// Supprimer un rôle
-elseif ($action == 'delete') {
-
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-
-        $id = (int) ($_POST['id'] ?? 0);
-
-        if ($id > 0) {
-            $roleController->delete($id);
-        }
+} elseif ($action === 'delete') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        exit('Method not allowed');
     }
+
+    if (!$authController->verifyCsrfToken($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        exit('Invalid security token.');
+    }
+
+    $id = (int) ($_POST['id'] ?? 0);
+    $success = $roleController->delete($id);
+
+    $_SESSION['role_flash'] = [
+        'type' => $success ? 'success' : 'error',
+        'message' => $success ? 'Role deleted successfully.' : 'Unable to delete this role. It may be protected or assigned to users.'
+    ];
 
     header('Location: Role.php');
     exit;
-}
 
-// Action inconnue
-else {
-    echo "Action introuvable";
+} else {
+    http_response_code(404);
+    exit('Action introuvable');
 }
-
-?>
