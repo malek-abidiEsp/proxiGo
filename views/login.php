@@ -1,8 +1,5 @@
+
 <?php
-/**
- * views/login.php
- * Expects: $errors (array), $csrfToken (string)
- */
 ob_start();
 ?>
 <div class="container">
@@ -20,17 +17,19 @@ ob_start();
         <div class="alert alert-success">Account created successfully, you can now log in.</div>
     <?php endif; ?>
 
-    <form method="POST" action="index.php?action=login">
+    <form id="loginForm" method="POST" action="index.php?action=login" novalidate>
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
         <label for="email">Email address</label>
-        <input type="email" id="email" name="email" required autocomplete="email">
+        <input type="email" id="email" name="email" autocomplete="email">
 
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password">
+        <input type="password" id="password" name="password" autocomplete="current-password">
 
         <button type="submit">Log in</button>
     </form>
+
+    <script src="assets/login-validation.js"></script>
 
     <div class="switch-link">
         Don't have an account yet? <a href="index.php?action=register">Sign up</a>
@@ -38,5 +37,5 @@ ob_start();
 </div>
 <?php
 $content = ob_get_clean();
-$title = 'Log in - MyApp';
+$title = 'Log in - ProxiGo';
 require __DIR__ . '/layout.php';
